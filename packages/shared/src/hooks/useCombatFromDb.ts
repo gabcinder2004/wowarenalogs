@@ -27,14 +27,12 @@ function parseRawSlice(
   let arenaMatch: IArenaMatch | undefined;
   let shuffleRound: IShuffleRound | undefined;
   let shuffleRoundByIndex: IShuffleRound | undefined;
-  const shuffleRounds: IShuffleRound[] = [];
 
   logParser.on('arena_match_ended', (data: IArenaMatch) => {
     if (!arenaMatch) arenaMatch = data;
   });
 
   logParser.on('solo_shuffle_round_ended', (data: IShuffleRound) => {
-    shuffleRounds.push(data);
     // The first round emitted is the one stored in this slice
     if (!shuffleRound) shuffleRound = data;
   });
@@ -59,11 +57,10 @@ export function useCombatFromDb(matchId: string, roundId?: string) {
   const queryParsedLog = useQuery(
     ['db-combat', matchId, roundId],
     async () => {
-      const fn = (window as unknown as { wowarenalogs?: { db?: { getRawSlice?: unknown } } }).wowarenalogs?.db
-        ?.getRawSlice;
-      if (typeof fn !== 'function') throw new Error('db bridge unavailable');
+      const fn = window.wowarenalogs?.db?.getRawSlice;
+      if (!fn) throw new Error('db bridge unavailable');
 
-      const slice = await (fn as (id: string) => Promise<{ rawText: string; wowVersion: WowVersion; timezone: string } | null>)(matchId);
+      const slice = await fn(matchId);
       if (!slice) return { matchId, combat: undefined };
 
       const combat = parseRawSlice(slice.rawText, slice.wowVersion, slice.timezone, roundId);

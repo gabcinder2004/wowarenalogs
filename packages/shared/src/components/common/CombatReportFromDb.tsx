@@ -26,5 +26,13 @@ export function CombatReportFromDb({ id, roundId, viewerIsOwner }: IProps) {
       />
     );
   }
-  return <ErrorPage message={JSON.stringify(combatQuery.error) || defaultErrorMessage} />;
+  let message: string;
+  if (combatQuery.error instanceof Error) {
+    message = combatQuery.error.message;
+  } else if (combatQuery.error) {
+    message = JSON.stringify(combatQuery.error);
+  } else {
+    message = defaultErrorMessage;
+  }
+  return <ErrorPage message={message} />;
 }
