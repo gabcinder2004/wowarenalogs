@@ -5,11 +5,16 @@ import {
   CombatResult,
   CombatUnitSpec,
   CombatUnitType,
+  deriveMatchSummary,
   getBurstDps,
   getEffectiveCombatDuration,
   getEffectiveDps,
   getEffectiveHps,
   IActivityStarted,
+  IArenaMatch,
+  IBattlegroundCombat,
+  IShuffleMatch,
+  IShuffleRound,
 } from '@wowarenalogs/parser';
 import {
   ArenaMatchMetadata,
@@ -160,6 +165,22 @@ const logCombatAnalyticsAsync = async (combat: AtomicArenaCombat) => {
 
 let currentActivity: IActivityStarted | null = null;
 
+async function persistCombatLocally(
+  combat: IArenaMatch | IShuffleRound | IShuffleMatch | IBattlegroundCombat,
+  rawLines: string[],
+  sourceFile: string | null,
+) {
+  const insertFn = window.wowarenalogs?.db?.insertMatch;
+  if (!insertFn) return;
+  try {
+    const summary = deriveMatchSummary(combat, sourceFile);
+    await insertFn(summary, rawLines.join('\n'));
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('local persist failed', e);
+  }
+}
+
 export const LocalCombatsContextProvider = (props: IProps) => {
   const [combats, setCombats] = useState<AtomicArenaCombat[]>([]);
   const auth = useAuth();
@@ -254,6 +275,7 @@ export const LocalCombatsContextProvider = (props: IProps) => {
           setCombats((prev) => {
             return prev.concat([combat]);
           });
+          persistCombatLocally(combat, combat.rawLines, null);
         }
       });
 
@@ -262,6 +284,7 @@ export const LocalCombatsContextProvider = (props: IProps) => {
           setCombats((prev) => {
             return prev.concat([combat]);
           });
+          persistCombatLocally(combat, combat.rawLines, null);
         }
       });
 
@@ -311,6 +334,10 @@ export const LocalCombatsContextProvider = (props: IProps) => {
                 });
               }
             });
+
+          // IShuffleMatch itself does not carry rawLines; aggregate from rounds.
+          const aggregatedRawLines = combat.rounds.flatMap((r) => r.rawLines);
+          persistCombatLocally(combat, aggregatedRawLines, null);
         }
       });
 
