@@ -40,6 +40,8 @@ export * from './actions/CombatExtraSpellAction';
 export * from './classMetadata';
 export * from './pipeline/common/stringToLogLine';
 export * from './pipeline/common/logLineToCombatEvent';
+export { deriveMatchSummary } from './matchSummary';
+export type { MatchSummaryRow } from './matchSummary';
 
 export interface IParserContext {
   wowVersion: WowVersion | null;
