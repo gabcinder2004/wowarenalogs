@@ -106,5 +106,7 @@ export type NativeApi = {
     getMatchById?: OmitFirstArg<DbModule['getMatchById']>;
     getRawSlice?: OmitFirstArg<DbModule['getRawSlice']>;
     getDbStats?: OmitFirstArg<DbModule['getDbStats']>;
+    runBootstrap?: OmitFirstArg<DbModule['runBootstrap']>;
+    isBootstrapped?: OmitFirstArg<DbModule['isBootstrapped']>;
   };
 };

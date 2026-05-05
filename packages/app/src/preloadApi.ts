@@ -114,5 +114,7 @@ export const modulesApi = {
     getMatchById: (...args: any[]) => ipcRenderer.invoke('wowarenalogs:db:getMatchById', ...args),
     getRawSlice: (...args: any[]) => ipcRenderer.invoke('wowarenalogs:db:getRawSlice', ...args),
     getDbStats: (...args: any[]) => ipcRenderer.invoke('wowarenalogs:db:getDbStats', ...args),
+    runBootstrap: (...args: any[]) => ipcRenderer.invoke('wowarenalogs:db:runBootstrap', ...args),
+    isBootstrapped: (...args: any[]) => ipcRenderer.invoke('wowarenalogs:db:isBootstrapped', ...args),
   },
 };

@@ -128,6 +128,27 @@ export default function DebugPage() {
           >
             Test Low Log Disk Alert
           </button>
+          <button
+            className="btn"
+            onClick={async () => {
+              const folders = Array.from(wowInstallations.values());
+              if (folders.length === 0) {
+                alert('No WoW installation configured');
+                return;
+              }
+              // wowInstallations values are the version-specific subdir (e.g. _retail_)
+              // so Logs is directly inside that dir
+              const logsFolder = `${folders[0]}/Logs`;
+              const isDone = await window.wowarenalogs.db?.isBootstrapped?.();
+              if (isDone && !confirm('Already bootstrapped. Re-run? (existing matches will be skipped)')) return;
+              const r = await window.wowarenalogs.db?.runBootstrap?.(logsFolder);
+              alert(
+                `Bootstrap done: scanned ${r?.scanned} match records, inserted ${r?.inserted} new ones from ${r?.files} log files`,
+              );
+            }}
+          >
+            Bootstrap from WoW Logs folder
+          </button>
         </div>
       </div>
     </div>

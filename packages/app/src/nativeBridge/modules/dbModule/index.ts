@@ -2,6 +2,7 @@ import type { MatchSummaryRow, WowVersion } from '@wowarenalogs/parser';
 import { BrowserWindow } from 'electron';
 
 import { moduleFunction, NativeBridgeModule, nativeBridgeModule } from '../../module';
+import { bootstrapFromLogsFolder, hasBootstrapped, markBootstrapped } from './bootstrap';
 import type { MatchSummaryDbRow } from './database';
 import * as Database from './database';
 
@@ -46,6 +47,21 @@ export class DbModule extends NativeBridgeModule {
     newest: number | null;
   }> {
     return Database.getDbStats();
+  }
+
+  @moduleFunction()
+  public async runBootstrap(
+    _mainWindow: BrowserWindow,
+    folder: string,
+  ): Promise<{ scanned: number; inserted: number; files: number }> {
+    const result = await bootstrapFromLogsFolder(folder);
+    markBootstrapped();
+    return result;
+  }
+
+  @moduleFunction()
+  public async isBootstrapped(_mainWindow: BrowserWindow): Promise<boolean> {
+    return hasBootstrapped();
   }
 
   public override onRegistered(_mainWindow: BrowserWindow): void {
