@@ -108,5 +108,11 @@ export const modulesApi = {
       ipcRenderer.on('wowarenalogs:obs:audioVolumeChanged', callback),
     removeAll_audioVolumeChanged_listeners: () => ipcRenderer.removeAllListeners('wowarenalogs:obs:audioVolumeChanged'),
   },
-  db: { ping: (...args: any[]) => ipcRenderer.invoke('wowarenalogs:db:ping', ...args) },
+  db: {
+    insertMatch: (...args: any[]) => ipcRenderer.invoke('wowarenalogs:db:insertMatch', ...args),
+    getMatchesSince: (...args: any[]) => ipcRenderer.invoke('wowarenalogs:db:getMatchesSince', ...args),
+    getMatchById: (...args: any[]) => ipcRenderer.invoke('wowarenalogs:db:getMatchById', ...args),
+    getRawSlice: (...args: any[]) => ipcRenderer.invoke('wowarenalogs:db:getRawSlice', ...args),
+    getDbStats: (...args: any[]) => ipcRenderer.invoke('wowarenalogs:db:getDbStats', ...args),
+  },
 };

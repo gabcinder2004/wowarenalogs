@@ -100,5 +100,11 @@ export type NativeApi = {
     audioVolumeChanged?: (callback: AsEventFunction<ObsModule['audioVolumeChanged']>) => void;
     removeAll_audioVolumeChanged_listeners?: () => void;
   };
-  db?: { ping?: OmitFirstArg<DbModule['ping']> };
+  db?: {
+    insertMatch?: OmitFirstArg<DbModule['insertMatch']>;
+    getMatchesSince?: OmitFirstArg<DbModule['getMatchesSince']>;
+    getMatchById?: OmitFirstArg<DbModule['getMatchById']>;
+    getRawSlice?: OmitFirstArg<DbModule['getRawSlice']>;
+    getDbStats?: OmitFirstArg<DbModule['getDbStats']>;
+  };
 };

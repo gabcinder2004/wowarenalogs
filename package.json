@@ -31,7 +31,8 @@
     "asarUnpack": [
       "packages/app/dist/node_modules/noobs/**",
       "packages/app/dist/dist/**",
-      "packages/app/dist/lib/noobs/**"
+      "packages/app/dist/lib/noobs/**",
+      "**/node_modules/better-sqlite3/**"
     ],
     "directories": {
       "buildResources": "packages/app/assets"

@@ -14,6 +14,7 @@ module.exports = {
   },
   externals: {
     noobs: 'commonjs2 noobs',
+    'better-sqlite3': 'commonjs2 better-sqlite3',
   },
   module: {
     rules: [
