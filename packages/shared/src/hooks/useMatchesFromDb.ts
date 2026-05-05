@@ -109,9 +109,9 @@ function specToClass(specId: string): CombatUnitClass {
 }
 
 // Build a minimal ICombatUnit-compatible object for a single player slot.
-function makeUnitStub(specId: string, teamId: string, unitIndex: number) {
+function makeUnitStub(specId: string, teamId: string, unitIndex: number, unitClass?: CombatUnitClass) {
   const spec = specId as CombatUnitSpec;
-  const unitClass = specToClass(specId);
+  const resolvedClass = unitClass !== undefined ? unitClass : specToClass(specId);
   const id = `${teamId}-${unitIndex}`;
   return {
     id,
@@ -121,7 +121,7 @@ function makeUnitStub(specId: string, teamId: string, unitIndex: number) {
     reaction: teamId === '0' ? CombatUnitReaction.Friendly : CombatUnitReaction.Hostile,
     affiliation: CombatUnitAffiliation.None,
     type: CombatUnitType.Player,
-    class: unitClass,
+    class: resolvedClass,
     spec,
     info: {
       teamId,
@@ -191,9 +191,15 @@ function buildUnitsFromSpecs(
       .filter(Boolean)
       .forEach((specId, i) => {
         // specs stored as "class:N" for classic logs without spec data
-        const cleanSpec = specId.startsWith('class:') ? CombatUnitSpec.None : specId;
-        const stub = makeUnitStub(cleanSpec, teamId, i);
-        units[stub.id] = stub;
+        if (specId.startsWith('class:')) {
+          const classNum = parseInt(specId.slice(6), 10);
+          const unitClass = isNaN(classNum) ? CombatUnitClass.None : (classNum as CombatUnitClass);
+          const stub = makeUnitStub(CombatUnitSpec.None as string, teamId, i, unitClass);
+          units[stub.id] = stub;
+        } else {
+          const stub = makeUnitStub(specId, teamId, i);
+          units[stub.id] = stub;
+        }
       });
   };
   addTeam(team0Specs, '0');
@@ -275,7 +281,7 @@ export function useMatchesFromDb(filter?: { since?: Date; bracket?: string }) {
         filter?.bracket,
       )) as MatchSummaryDbRow[];
     },
-    { staleTime: 30_000 },
+    { staleTime: 0 },
   );
 }
 

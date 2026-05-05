@@ -66,7 +66,7 @@ function summariseAtomic(
     wowVersion: combat.wowVersion,
     timezone: combat.timezone,
     result: combat.result,
-    winningTeamId: endInfo?.winningTeamId ?? null,
+    winningTeamId: combat.winningTeamId ?? endInfo?.winningTeamId ?? null,
     playerTeamId: combat.playerTeamId ?? null,
     playerId: combat.playerId ?? null,
     playerSpec: player?.spec ?? null,

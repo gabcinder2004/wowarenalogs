@@ -18,6 +18,16 @@ describe('deriveMatchSummary', () => {
     expect(summary.team1Specs).toMatch(/\d+(\/\d+)*/);
     expect(summary.sourceFile).toBe('src.txt');
     expect(summary.playerClass).toMatch(/^[A-Z][a-zA-Z]+$/);
+    expect(summary.winningTeamId).not.toBeNull();
+  });
+
+  it('winningTeamId is non-null for a shuffle round', () => {
+    const { shuffleRounds } = loadLogFile('one_solo_shuffle.txt');
+    expect(shuffleRounds.length).toBeGreaterThan(0);
+    const summary = deriveMatchSummary(shuffleRounds[0], 'src.txt');
+
+    expect(summary.dataType).toBe('ShuffleRound');
+    expect(summary.winningTeamId).not.toBeNull();
   });
 
   it('extracts a shuffle round', () => {
