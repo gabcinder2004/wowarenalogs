@@ -1,3 +1,4 @@
+import { IBattlegroundCombat } from '../src/CombatData';
 import { deriveMatchSummary } from '../src/matchSummary';
 import { loadLogFile } from './testLogLoader';
 
@@ -16,6 +17,7 @@ describe('deriveMatchSummary', () => {
     expect(summary.team0Specs).toMatch(/\d+(\/\d+)*/);
     expect(summary.team1Specs).toMatch(/\d+(\/\d+)*/);
     expect(summary.sourceFile).toBe('src.txt');
+    expect(summary.playerClass).toMatch(/^[A-Z][a-zA-Z]+$/);
   });
 
   it('extracts a shuffle round', () => {
@@ -28,11 +30,27 @@ describe('deriveMatchSummary', () => {
   });
 
   it('handles a battleground without result/duration fields', () => {
-    const { battlegrounds = [] } = loadLogFile('bg_blitz.txt');
-    if (battlegrounds.length === 0) return; // some fixtures don't have BG
-    const summary = deriveMatchSummary(battlegrounds[0], 'src.txt');
+    const bg: IBattlegroundCombat = {
+      dataType: 'BattlegroundCombat',
+      id: 'fake-bg-id',
+      wowVersion: 'retail',
+      timezone: 'America/New_York',
+      zoneInEvent: { instanceId: 1234 } as never,
+      zoneOutEvent: { instanceId: 1234 } as never,
+      units: {},
+      events: [],
+      rawLines: [],
+      startTime: 1_700_000_000_000,
+      endTime: 1_700_000_900_000,
+    };
+
+    const summary = deriveMatchSummary(bg, 'src.txt');
     expect(summary.dataType).toBe('BattlegroundCombat');
+    expect(summary.bracket).toBe('battleground');
+    expect(summary.zoneId).toBe('1234');
     expect(summary.result).toBeNull();
-    expect(summary.durationSeconds).toBeGreaterThanOrEqual(0);
+    expect(summary.durationSeconds).toBe(900);
+    expect(summary.team0Specs).toBe('');
+    expect(summary.team1Specs).toBe('');
   });
 });

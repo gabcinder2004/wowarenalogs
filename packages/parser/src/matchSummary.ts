@@ -46,43 +46,39 @@ const teamSpecs = (combat: AtomicArenaCombat, teamId: string): string =>
     .sort()
     .join('/');
 
-function summariseArena(m: IArenaMatch, sourceFile: string | null): MatchSummaryRow {
-  const player = Object.values(m.units).find((u) => u.id === m.playerId);
+function summariseAtomic(
+  combat: AtomicArenaCombat,
+  sourceFile: string | null,
+  dataType: 'ArenaMatch' | 'ShuffleRound',
+): MatchSummaryRow {
+  const player = Object.values(combat.units).find((u) => u.id === combat.playerId);
+  const endInfo = combat.dataType === 'ArenaMatch' ? combat.endInfo : undefined;
   return {
-    id: m.id,
-    dataType: 'ArenaMatch',
+    id: combat.id,
+    dataType,
     shuffleMatchId: null,
     sequenceNumber: null,
-    startTime: m.startTime,
-    endTime: m.endTime,
-    durationSeconds: m.durationInSeconds,
-    bracket: m.startInfo.bracket,
-    zoneId: m.startInfo.zoneId ?? null,
-    wowVersion: m.wowVersion,
-    timezone: m.timezone,
-    result: m.result,
-    winningTeamId: m.endInfo?.winningTeamId ?? null,
-    playerTeamId: m.playerTeamId ?? null,
-    playerId: m.playerId ?? null,
+    startTime: combat.startTime,
+    endTime: combat.endTime,
+    durationSeconds: combat.durationInSeconds,
+    bracket: combat.startInfo.bracket,
+    zoneId: combat.startInfo.zoneId ?? null,
+    wowVersion: combat.wowVersion,
+    timezone: combat.timezone,
+    result: combat.result,
+    winningTeamId: endInfo?.winningTeamId ?? null,
+    playerTeamId: combat.playerTeamId ?? null,
+    playerId: combat.playerId ?? null,
     playerSpec: player?.spec ?? null,
     playerClass: player ? CombatUnitClass[player.class] : null,
-    team0Specs: teamSpecs(m, '0'),
-    team1Specs: teamSpecs(m, '1'),
-    team0Mmr: m.endInfo?.team0MMR ?? null,
-    team1Mmr: m.endInfo?.team1MMR ?? null,
+    team0Specs: teamSpecs(combat, '0'),
+    team1Specs: teamSpecs(combat, '1'),
+    team0Mmr: endInfo?.team0MMR ?? null,
+    team1Mmr: endInfo?.team1MMR ?? null,
     playerDamage: player?.damageOut?.reduce((a, e) => a + (e.effectiveAmount ?? 0), 0) ?? 0,
     playerHealing: player?.healOut?.reduce((a, e) => a + (e.effectiveAmount ?? 0), 0) ?? 0,
     playerDeaths: player?.deathRecords?.length ?? 0,
     sourceFile,
-  };
-}
-
-function summariseShuffleRound(r: IShuffleRound, sourceFile: string | null): MatchSummaryRow {
-  const base = summariseArena(r as unknown as IArenaMatch, sourceFile);
-  return {
-    ...base,
-    dataType: 'ShuffleRound',
-    sequenceNumber: r.sequenceNumber,
   };
 }
 
@@ -152,9 +148,12 @@ export function deriveMatchSummary(
 ): MatchSummaryRow {
   switch (combat.dataType) {
     case 'ArenaMatch':
-      return summariseArena(combat, sourceFile);
+      return summariseAtomic(combat, sourceFile, 'ArenaMatch');
     case 'ShuffleRound':
-      return summariseShuffleRound(combat, sourceFile);
+      return {
+        ...summariseAtomic(combat, sourceFile, 'ShuffleRound'),
+        sequenceNumber: combat.sequenceNumber,
+      };
     case 'ShuffleMatch':
       return summariseShuffleMatch(combat, sourceFile);
     case 'BattlegroundCombat':
