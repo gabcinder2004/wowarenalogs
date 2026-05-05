@@ -3,6 +3,41 @@ import Database from 'better-sqlite3';
 import { app } from 'electron';
 import path from 'path';
 
+export interface MatchSummaryDbRow extends MatchSummaryRow {
+  ingestedAt: number;
+  schemaVersion: number;
+}
+
+const SELECT_MATCH_SUMMARY_COLUMNS = `
+  id,
+  data_type AS dataType,
+  shuffle_match_id AS shuffleMatchId,
+  sequence_number AS sequenceNumber,
+  start_time AS startTime,
+  end_time AS endTime,
+  duration_seconds AS durationSeconds,
+  bracket,
+  zone_id AS zoneId,
+  wow_version AS wowVersion,
+  timezone,
+  result,
+  winning_team_id AS winningTeamId,
+  player_team_id AS playerTeamId,
+  player_id AS playerId,
+  player_spec AS playerSpec,
+  player_class AS playerClass,
+  team0_specs AS team0Specs,
+  team1_specs AS team1Specs,
+  team0_mmr AS team0Mmr,
+  team1_mmr AS team1Mmr,
+  player_damage AS playerDamage,
+  player_healing AS playerHealing,
+  player_deaths AS playerDeaths,
+  source_file AS sourceFile,
+  ingested_at AS ingestedAt,
+  schema_version AS schemaVersion
+`;
+
 const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS match_summary (
   id              TEXT PRIMARY KEY,
@@ -123,22 +158,31 @@ export function insertMatch(summary: MatchSummaryRow, rawText: string): { insert
   return { inserted: tx() === true };
 }
 
-export function getMatchesSince(sinceMs: number, bracket?: string): unknown[] {
+export function getMatchesSince(sinceMs: number, bracket?: string): MatchSummaryDbRow[] {
   const db = getDb();
   if (bracket) {
     return db
-      .prepare('SELECT * FROM match_summary WHERE start_time >= ? AND bracket = ? ORDER BY start_time DESC')
-      .all(sinceMs, bracket);
+      .prepare(
+        `SELECT ${SELECT_MATCH_SUMMARY_COLUMNS} FROM match_summary WHERE start_time >= ? AND bracket = ? ORDER BY start_time DESC`,
+      )
+      .all(sinceMs, bracket) as MatchSummaryDbRow[];
   }
-  return db.prepare('SELECT * FROM match_summary WHERE start_time >= ? ORDER BY start_time DESC').all(sinceMs);
+  return db
+    .prepare(`SELECT ${SELECT_MATCH_SUMMARY_COLUMNS} FROM match_summary WHERE start_time >= ? ORDER BY start_time DESC`)
+    .all(sinceMs) as MatchSummaryDbRow[];
 }
 
-export function getMatchById(id: string): unknown {
+export function getMatchById(id: string): MatchSummaryDbRow | null {
   const db = getDb();
-  return db.prepare('SELECT * FROM match_summary WHERE id = ?').get(id) ?? null;
+  const row = db.prepare(`SELECT ${SELECT_MATCH_SUMMARY_COLUMNS} FROM match_summary WHERE id = ?`).get(id) as
+    | MatchSummaryDbRow
+    | undefined;
+  return row ?? null;
 }
 
-export function getRawSlice(id: string): { rawText: string; wowVersion: string; timezone: string } | null {
+export function getRawSlice(
+  id: string,
+): { rawText: string; wowVersion: MatchSummaryRow['wowVersion']; timezone: string } | null {
   const db = getDb();
   const row = db
     .prepare(
@@ -148,6 +192,6 @@ export function getRawSlice(id: string): { rawText: string; wowVersion: string; 
       WHERE r.id = ?
     `,
     )
-    .get(id) as { rawText: string; wowVersion: string; timezone: string } | undefined;
+    .get(id) as { rawText: string; wowVersion: MatchSummaryRow['wowVersion']; timezone: string } | undefined;
   return row ?? null;
 }

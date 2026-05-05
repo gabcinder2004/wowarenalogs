@@ -5,7 +5,7 @@ import {
   IShuffleMatch,
   IShuffleRound,
 } from './CombatData';
-import { CombatUnitClass, CombatUnitType } from './types';
+import { CombatUnitClass, CombatUnitType, WowVersion } from './types';
 
 export interface MatchSummaryRow {
   id: string;
@@ -18,7 +18,7 @@ export interface MatchSummaryRow {
   durationSeconds: number;
   bracket: string;
   zoneId: string | null;
-  wowVersion: string;
+  wowVersion: WowVersion;
   timezone: string;
 
   result: number | null;

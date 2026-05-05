@@ -2,6 +2,7 @@ import type { MatchSummaryRow, WowVersion } from '@wowarenalogs/parser';
 import { BrowserWindow } from 'electron';
 
 import { moduleFunction, NativeBridgeModule, nativeBridgeModule } from '../../module';
+import type { MatchSummaryDbRow } from './database';
 import * as Database from './database';
 
 @nativeBridgeModule('db')
@@ -16,12 +17,16 @@ export class DbModule extends NativeBridgeModule {
   }
 
   @moduleFunction()
-  public async getMatchesSince(_mainWindow: BrowserWindow, sinceMs: number, bracket?: string): Promise<unknown[]> {
+  public async getMatchesSince(
+    _mainWindow: BrowserWindow,
+    sinceMs: number,
+    bracket?: string,
+  ): Promise<MatchSummaryDbRow[]> {
     return Database.getMatchesSince(sinceMs, bracket);
   }
 
   @moduleFunction()
-  public async getMatchById(_mainWindow: BrowserWindow, id: string): Promise<unknown> {
+  public async getMatchById(_mainWindow: BrowserWindow, id: string): Promise<MatchSummaryDbRow | null> {
     return Database.getMatchById(id);
   }
 
@@ -30,7 +35,7 @@ export class DbModule extends NativeBridgeModule {
     _mainWindow: BrowserWindow,
     id: string,
   ): Promise<{ rawText: string; wowVersion: WowVersion; timezone: string } | null> {
-    return Database.getRawSlice(id) as { rawText: string; wowVersion: WowVersion; timezone: string } | null;
+    return Database.getRawSlice(id);
   }
 
   @moduleFunction()
