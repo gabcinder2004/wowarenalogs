@@ -6,7 +6,7 @@
 
 **Architecture:** Add a `better-sqlite3`-backed `dbModule` in the Electron main process, exposed to the renderer via the existing nativeBridge IPC pattern. Persist `match_summary` (flat fields) + `match_raw` (raw log slice text). Bootstrap once from `WoWCombatLog-*.txt` files in the user's WoW Logs folder, then capture incrementally. Replace `useGetMyMatchesQuery` with `useMatchesFromDb`, and `useCombatFromStorage` with `useCombatFromDb` (same parse-on-view behavior as prod, just sourced locally). Full design in `docs/plans/2026-05-05-local-sqlite-persistence-design.md`.
 
-**Tech Stack:** Electron 38, TypeScript, better-sqlite3 11.x, Next.js 14 (renderer), `@wowarenalogs/parser`, react-query.
+**Tech Stack:** Electron 38, TypeScript, better-sqlite3 12.x (revised from 11.x mid-Task-1: `^11` had no Node 24 prebuild and the local toolchain couldn't compile from source), Next.js 14 (renderer), `@wowarenalogs/parser`, react-query.
 
 **Definition of done (Phase 1):**
 1. `npm run dev:app` boots without GCP credentials.
@@ -50,9 +50,11 @@ Expected: "On branch feat/local-sqlite-persistence", "nothing to commit".
 **Step 1: Install**
 
 ```bash
-npm install -w @wowarenalogs/app better-sqlite3@^11
+npm install -w @wowarenalogs/app better-sqlite3@^12 --build-from-source=false
 npm install -w @wowarenalogs/app -D @types/better-sqlite3
 ```
+
+(Plan originally specified `^11`. Revised to `^12` because `@11` has no Node 24 prebuild and falls through to source-compile, which fails on machines whose VS BuildTools version isn't recognized by node-gyp 9.4.1. `@12` ships Node 24 + Electron 38 prebuilds — no compile needed.)
 
 **Step 2: Rebuild native module against Electron's ABI**
 
@@ -429,6 +431,26 @@ git commit -m "feat(app): scaffold dbModule with ping IPC method"
 - Create: `packages/app/src/nativeBridge/modules/dbModule/schema.sql`
 - Create: `packages/app/src/nativeBridge/modules/dbModule/database.ts`
 - Modify: `packages/app/src/nativeBridge/modules/dbModule/index.ts`
+- Modify: `packages/app/webpack.config.js` (add `better-sqlite3` to `externals`)
+- Modify: `package.json` root (add `**/node_modules/better-sqlite3/**` to `build.asarUnpack`; only matters at packaging time, but cheaper to land here)
+
+**Step 0 (added retroactively after Task 1 review): wire native module bundling**
+
+The `electron-main` webpack target does not auto-externalize native modules. Without an `externals` entry, webpack will try to bundle `better-sqlite3` and break its `bindings`/`node-pre-gyp` `__dirname` resolution.
+
+In `packages/app/webpack.config.js`, find the `externals` block (currently only lists `noobs`) and add:
+
+```js
+'better-sqlite3': 'commonjs2 better-sqlite3',
+```
+
+In root `package.json`, the `build.asarUnpack` array currently lists noobs paths. Add:
+
+```json
+"**/node_modules/better-sqlite3/**"
+```
+
+(The `.node` binary cannot be `dlopen`'d from inside `app.asar` when packaged.)
 
 **Step 1: Create schema file**
 
