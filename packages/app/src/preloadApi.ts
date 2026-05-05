@@ -108,4 +108,5 @@ export const modulesApi = {
       ipcRenderer.on('wowarenalogs:obs:audioVolumeChanged', callback),
     removeAll_audioVolumeChanged_listeners: () => ipcRenderer.removeAllListeners('wowarenalogs:obs:audioVolumeChanged'),
   },
+  db: { ping: (...args: any[]) => ipcRenderer.invoke('wowarenalogs:db:ping', ...args) },
 };

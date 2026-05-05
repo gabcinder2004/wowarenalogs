@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ApplicationModule } from './nativeBridge/modules/applicationModule';
 import { BnetModule } from './nativeBridge/modules/bnetModule';
+import { DbModule } from './nativeBridge/modules/dbModule';
 import { ExternalLinksModule } from './nativeBridge/modules/externalLinksModule';
 import { FilesModule } from './nativeBridge/modules/filesModule';
 import { LogsModule } from './nativeBridge/modules/logsModule';
@@ -99,4 +100,5 @@ export type NativeApi = {
     audioVolumeChanged?: (callback: AsEventFunction<ObsModule['audioVolumeChanged']>) => void;
     removeAll_audioVolumeChanged_listeners?: () => void;
   };
+  db?: { ping?: OmitFirstArg<DbModule['ping']> };
 };
