@@ -55,7 +55,7 @@ export class DbModule extends NativeBridgeModule {
     folder: string,
   ): Promise<{ scanned: number; inserted: number; files: number }> {
     const result = await bootstrapFromLogsFolder(folder);
-    markBootstrapped();
+    if (result.files > 0) markBootstrapped();
     return result;
   }
 

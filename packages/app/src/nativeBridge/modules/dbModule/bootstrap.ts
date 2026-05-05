@@ -7,8 +7,11 @@ import * as Database from './database';
 
 export async function bootstrapFromLogsFolder(
   folder: string,
-  onProgress?: (current: number, total: number) => void,
 ): Promise<{ scanned: number; inserted: number; files: number }> {
+  if (!fs.existsSync(folder)) {
+    return { scanned: 0, inserted: 0, files: 0 };
+  }
+
   const files = fs
     .readdirSync(folder)
     .filter((f) => /^WoWCombatLog-.*\.txt$/i.test(f))
@@ -18,7 +21,6 @@ export async function bootstrapFromLogsFolder(
   let inserted = 0;
 
   for (let i = 0; i < files.length; i++) {
-    onProgress?.(i, files.length);
     const filePath = files[i];
     const sourceFile = path.basename(filePath);
     const parser = new WoWCombatLogParser(null);
@@ -38,8 +40,9 @@ export async function bootstrapFromLogsFolder(
       const result = Database.insertMatch(deriveMatchSummary(bg, sourceFile), bg.rawLines.join('\n'));
       if (result.inserted) inserted++;
     });
-    parser.on('parser_error', () => {
-      // swallow per-line parser errors; don't abort the whole file
+    parser.on('parser_error', (err) => {
+      // eslint-disable-next-line no-console
+      console.warn(`[bootstrap] parser_error in ${sourceFile}:`, err);
     });
 
     const stream = fs.createReadStream(filePath, { encoding: 'utf8' });
@@ -48,7 +51,6 @@ export async function bootstrapFromLogsFolder(
     parser.flush();
     parser.removeAllListeners();
   }
-  onProgress?.(files.length, files.length);
   return { scanned, inserted, files: files.length };
 }
 
