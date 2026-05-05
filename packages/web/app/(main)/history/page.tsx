@@ -1,54 +1,45 @@
 'use client';
 
-import { CombatStubList, LoadingScreen, useAuth } from '@wowarenalogs/shared';
+import { CombatStubList, LoadingScreen, rowToArenaMatch, rowToShuffleRound, useMatchesFromDb } from '@wowarenalogs/shared';
 import { LocalRemoteHybridCombat } from '@wowarenalogs/shared/src/components/CombatStubList/rows';
-import { QuerryError } from '@wowarenalogs/shared/src/components/common/QueryError';
-import { SignInPromotion } from '@wowarenalogs/shared/src/components/common/SignInPromotion';
-import { useGetMyMatchesQuery } from '@wowarenalogs/shared/src/graphql/__generated__/graphql';
-import _ from 'lodash';
 import { useMemo } from 'react';
 import { TbLoader } from 'react-icons/tb';
 
 export default function HistoryPage() {
-  const { isLoadingAuthData, isAuthenticated } = useAuth();
-  const matchesQuery = useGetMyMatchesQuery();
+  const matchesQuery = useMatchesFromDb();
 
-  const hybridCombats = useMemo(() => {
-    if (isLoadingAuthData) {
-      return [];
-    }
+  const hybridCombats = useMemo<LocalRemoteHybridCombat[]>(() => {
+    const rows = matchesQuery.data ?? [];
+    return rows
+      .filter((r) => r.dataType === 'ArenaMatch' || r.dataType === 'ShuffleRound')
+      .map((r): LocalRemoteHybridCombat => {
+        if (r.dataType === 'ShuffleRound') {
+          return {
+            isLocal: true,
+            isShuffle: true,
+            match: rowToShuffleRound(r),
+          };
+        }
+        return {
+          isLocal: true,
+          isShuffle: false,
+          match: rowToArenaMatch(r),
+        };
+      });
+  }, [matchesQuery.data]);
 
-    const remoteCombats = matchesQuery.data?.myMatches?.combats || [];
-    return _.orderBy(
-      remoteCombats.map((c) => ({
-        isLocal: false,
-        isShuffle: c.__typename === 'ShuffleRoundStub',
-        match: c,
-      })) as LocalRemoteHybridCombat[],
-      (c) => c.match.startTime,
-      ['desc'],
-    );
-  }, [matchesQuery.data, isLoadingAuthData]);
-
-  if (isLoadingAuthData) {
-    return <LoadingScreen />;
-  }
-
-  if (!isAuthenticated) {
-    return <SignInPromotion />;
-  }
+  if (matchesQuery.isLoading) return <LoadingScreen />;
 
   return (
     <div className="transition-all px-2 overflow-y-auto">
       <div className="animate-fadein mt-2">
         <CombatStubList viewerIsOwner={true} combats={hybridCombats} source="history" />
       </div>
-      {matchesQuery.loading && (
+      {matchesQuery.isFetching && (
         <div className="flex flex-row items-center justify-center animate-loader h-[300px]">
           <TbLoader color="gray" size={60} className="animate-spin-slow" />
         </div>
       )}
-      <QuerryError query={matchesQuery} />
     </div>
   );
 }

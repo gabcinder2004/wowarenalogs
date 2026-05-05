@@ -28,3 +28,4 @@ export { RatingSelector } from './components/MatchSearch/RatingSelector';
 export { BracketSelector } from './components/MatchSearch/BracketSelector';
 export * from './graphql/__generated__/graphql';
 export type { ArenaMatchMetadata, ShuffleMatchMetadata } from './types/metadata';
+export * from './hooks/useMatchesFromDb';
