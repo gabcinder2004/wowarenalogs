@@ -13,7 +13,6 @@ import {
   IActivityStarted,
   IArenaMatch,
   IBattlegroundCombat,
-  IShuffleMatch,
   IShuffleRound,
 } from '@wowarenalogs/parser';
 import {
@@ -166,7 +165,7 @@ const logCombatAnalyticsAsync = async (combat: AtomicArenaCombat) => {
 let currentActivity: IActivityStarted | null = null;
 
 async function persistCombatLocally(
-  combat: IArenaMatch | IShuffleRound | IShuffleMatch | IBattlegroundCombat,
+  combat: IArenaMatch | IShuffleRound | IBattlegroundCombat,
   rawLines: string[],
   sourceFile: string | null,
 ) {
@@ -178,6 +177,7 @@ async function persistCombatLocally(
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error('local persist failed', e);
+    Sentry.captureException(e, { extra: { combatId: combat.id, dataType: combat.dataType } });
   }
 }
 
@@ -275,7 +275,7 @@ export const LocalCombatsContextProvider = (props: IProps) => {
           setCombats((prev) => {
             return prev.concat([combat]);
           });
-          persistCombatLocally(combat, combat.rawLines, null);
+          void persistCombatLocally(combat, combat.rawLines, null);
         }
       });
 
@@ -284,7 +284,7 @@ export const LocalCombatsContextProvider = (props: IProps) => {
           setCombats((prev) => {
             return prev.concat([combat]);
           });
-          persistCombatLocally(combat, combat.rawLines, null);
+          void persistCombatLocally(combat, combat.rawLines, null);
         }
       });
 
@@ -334,10 +334,6 @@ export const LocalCombatsContextProvider = (props: IProps) => {
                 });
               }
             });
-
-          // IShuffleMatch itself does not carry rawLines; aggregate from rounds.
-          const aggregatedRawLines = combat.rounds.flatMap((r) => r.rawLines);
-          persistCombatLocally(combat, aggregatedRawLines, null);
         }
       });
 
