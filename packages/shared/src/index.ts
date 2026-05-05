@@ -29,3 +29,5 @@ export { BracketSelector } from './components/MatchSearch/BracketSelector';
 export * from './graphql/__generated__/graphql';
 export type { ArenaMatchMetadata, ShuffleMatchMetadata } from './types/metadata';
 export * from './hooks/useMatchesFromDb';
+export * from './hooks/useCombatFromDb';
+export * from './components/common/CombatReportFromDb';

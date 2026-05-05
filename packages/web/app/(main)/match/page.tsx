@@ -1,6 +1,6 @@
 'use client';
 
-import { CombatReportFromStorage } from '@wowarenalogs/shared';
+import { CombatReportFromDb } from '@wowarenalogs/shared';
 import { useSearchParams } from 'next/navigation';
 
 export default function MatchPage() {
@@ -16,7 +16,7 @@ export default function MatchPage() {
   return (
     <>
       <title>Combat Report | WoW Arena Logs</title>
-      <CombatReportFromStorage
+      <CombatReportFromDb
         id={id}
         roundId={roundId ? roundId.toString() : undefined}
         viewerIsOwner={viewerIsOwner === 'true'}
